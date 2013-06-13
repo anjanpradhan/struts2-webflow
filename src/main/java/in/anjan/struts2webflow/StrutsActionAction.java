@@ -35,7 +35,7 @@ import com.opensymphony.xwork2.util.TextParseUtil;
 import com.opensymphony.xwork2.util.ValueStack;
 
 /**
- * Executes Struts 2 Action.
+ * Executes Struts 2 action.
  * TODO: enrich
  */
 public class StrutsActionAction

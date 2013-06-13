@@ -28,7 +28,7 @@ import in.anjan.struts2webflow.AbstractFlowScopeInterceptor;
 
 /**
  * Interceptor to {@link #intercept(ActionInvocation) intercept the invocation}
- * of the Struts 2 Action to set the required values to value stack.
+ * of the Struts 2 action to set the required values to value stack.
  * <p/>
  * Acts on {@link FlowIn} and {@link FlowOut}.
  */

@@ -18,13 +18,8 @@ package in.anjan.struts2webflow;
 
 import java.util.Map;
 
-import org.apache.struts2.ServletActionContext;
-
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.webflow.context.ExternalContext;
 import org.springframework.webflow.context.ExternalContextHolder;
-import org.springframework.webflow.context.servlet.ServletExternalContext;
 import org.springframework.webflow.core.collection.MutableAttributeMap;
 import org.springframework.webflow.execution.FlowExecution;
 import org.springframework.webflow.execution.FlowExecutionKey;
@@ -41,7 +36,7 @@ import com.opensymphony.xwork2.interceptor.PreResultListener;
 /**
  * Interceptor abstraction to
  * {@link #intercept(ActionInvocation) intercept the invocation} of the
- * Struts 2 Action to set the required values to value stack.
+ * Struts 2 action to set the required values to value stack.
  */
 public abstract class AbstractFlowScopeInterceptor
         implements Interceptor, PreResultListener {
@@ -61,7 +56,7 @@ public abstract class AbstractFlowScopeInterceptor
      * <p/>
      * Can be set through {@link #setFlowExecutorBean(String)}.
      * <br/>This action will try to find the {@link FlowExecutor flow executor}
-     * bean by this name from the Spring context hierarchy.
+     * bean by this name from the Spring context.
      */
     private String flowExecutorBean = FlowAction.DEFAULT_FLOW_EXECUTOR_BEAN;
     /**
@@ -146,17 +141,7 @@ public abstract class AbstractFlowScopeInterceptor
         // don't have the external context set?
         // if no, need to create and set the external context
         if (ExternalContextHolder.getExternalContext() == null) {
-            ExternalContext context =
-                    new ServletExternalContext(
-                            ServletActionContext.getServletContext(),
-                            ServletActionContext.getRequest(),
-                            ServletActionContext.getResponse());
-
-            // keeping safe
-            context.getRequestMap().put(
-                    ActionInvocation.class.getName(),
-                    ActionContext.getContext().getActionInvocation());
-
+            ExternalContext context = ExternalContextUtils.createExternalContext();
             ExternalContextHolder.setExternalContext(context);
         }
 
@@ -224,7 +209,7 @@ public abstract class AbstractFlowScopeInterceptor
      * context hierarchy.
      * <p/>
      * This action will try to find the {@link FlowExecutor flow executor} bean
-     * by this name from the Spring context hierarchy.
+     * by this name from the Spring context.
      *
      * @param flowExecutorBean {@link FlowExecutor flow executor} bean name to
      *                         be set
@@ -240,21 +225,9 @@ public abstract class AbstractFlowScopeInterceptor
      * @return {@link FlowExecutor flow executor} bean
      */
     public FlowExecutor getFlowExecutor() {
-        // need to find the Spring web application context
-        WebApplicationContext context =
-                WebApplicationContextUtils
-                        .getRequiredWebApplicationContext(
-                                ServletActionContext.getServletContext());
-
-        // have the flow executor configured?
-        // if yes, get the flow execution
-        // else, blame
-        if (context.containsBean(flowExecutorBean))
-            flowExecutor = context.getBean(flowExecutorBean, FlowExecutor.class);
-        else
-            throw new RuntimeException("Flow executor named as '" + flowExecutorBean + "' not found!");
-
-        return flowExecutor;
+        return flowExecutor == null
+               ? FlowExecutorUtils.getRequiredFlowExecutor(flowExecutorBean)
+               : flowExecutor;
     }
 
     /**

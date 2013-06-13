@@ -24,7 +24,7 @@ import com.opensymphony.xwork2.util.ValueStack;
 
 /**
  * Interceptor to {@link #intercept(ActionInvocation) intercept the invocation}
- * of the Struts 2 Action to set the required values to value stack.
+ * of the Struts 2 action to set the required values to value stack.
  */
 public class FlowScopeInterceptor
         extends AbstractFlowScopeInterceptor {

@@ -28,7 +28,7 @@ import org.springframework.webflow.execution.RequestContext;
 import org.springframework.webflow.mvc.view.FlowViewResolver;
 
 /**
- * Resolves Struts 2 {@link org.springframework.webflow.engine.ViewState View}.
+ * Resolves Struts 2 {@link org.springframework.webflow.engine.ViewState view}.
  * TODO: enrich
  */
 public class JspViewResolver

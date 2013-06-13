@@ -16,35 +16,26 @@
 
 package in.anjan.struts2webflow;
 
-import javax.servlet.ServletContext;
-
-import org.apache.struts2.ServletActionContext;
 import org.apache.struts2.dispatcher.DefaultActionSupport;
 
-import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.webflow.context.ExternalContext;
-import org.springframework.webflow.context.servlet.ServletExternalContext;
 import org.springframework.webflow.executor.FlowExecutionResult;
 import org.springframework.webflow.executor.FlowExecutor;
 
-import com.opensymphony.xwork2.ActionContext;
-import com.opensymphony.xwork2.ActionInvocation;
-
 /**
- * The adapter between the Struts 2 Action layer and the Spring Web Flow
+ * The adapter between the Struts 2 action layer and the Spring Web Flow
  * engine, enables to execute Spring Web Flow under the Struts 2.
  * <p/>
  * It assumes that the web application is running with a
  * {@link
- *  org.springframework.web.context.support.WebApplicationContextUtils#getRequiredWebApplicationContext(ServletContext)
- *  Spring Web Application Context}
- * and the {@link FlowExecutor Flow Executor} is defined in that Spring Web
- * Application Context (or somewhere in its hierarchy).
+ *  org.springframework.web.context.support.WebApplicationContextUtils#getRequiredWebApplicationContext(javax.servlet.ServletContext)
+ *  Spring web application context}
+ * and the {@link FlowExecutor flow executor} is defined in that Spring web
+ * application context (or somewhere in its hierarchy).
  * <p/>
  * Additionally,
- * {@link org.springframework.webflow.engine.ViewState every View} in a
- * {@link org.springframework.webflow.engine.Flow} must have it set as the
+ * {@link org.springframework.webflow.engine.ViewState every view} in a
+ * {@link org.springframework.webflow.engine.Flow flow} must have it set as the
  * target action and submit the
  * {@link
  *  org.springframework.webflow.definition.TransitionDefinition#getId()
@@ -61,26 +52,24 @@ public class FlowAction
 
     /**
      * Default expression to find/set the
-     * {@link
-     *  org.springframework.webflow.executor.FlowExecutionResult#getPausedKey()
-     *  flow execution paused key}
+     * {@link FlowExecutionResult#getPausedKey() flow execution paused key}
      * from/to the value stack.
      */
     public static final String DEFAULT_PAUSED_KEY_EXPRESSION = "pausedKey";
 
     /**
      * {@link FlowExecutor Flow executor} bean name as configured in the Spring
-     * context hierarchy.
+     * web application context hierarchy.
      * <p/>
      * Can be set through {@link #setFlowExecutorBean(String)}.
      * <br/>This action will try to find the {@link FlowExecutor flow executor}
-     * bean by this name from the Spring context hierarchy.
+     * bean by this name from the Spring web application context.
      */
     private String flowExecutorBean = DEFAULT_FLOW_EXECUTOR_BEAN;
     /**
      * {@link FlowExecutor Flow executor} bean.
      * <p/>
-     * Must be configured in the Spring context.
+     * Must be configured in the Spring web application context.
      */
     private FlowExecutor flowExecutor;
     /**
@@ -108,27 +97,18 @@ public class FlowAction
      */
     @Override
     public String execute() {
-        // need to create the external context
-        // flow executor needs it
-        ExternalContext context =
-                new ServletExternalContext(
-                        ServletActionContext.getServletContext(),
-                        ServletActionContext.getRequest(),
-                        ServletActionContext.getResponse());
-
-        // need to put the action invocation on the context's request map
-        // need it later to execute Struts action
-        context.getRequestMap().put(
-                ActionInvocation.class.getName(),
-                ActionContext.getContext().getActionInvocation());
+        // create the external context
+        ExternalContext context = ExternalContextUtils.createExternalContext();
+        // get the flow executor
+        FlowExecutor executor = getFlowExecutor();
 
         // don't have the paused key?
         // if no, launch the flow execution
         // else, resume the flow execution
         FlowExecutionResult result =
                 pausedKey == null
-                        ? getFlowExecutor().launchExecution(flowId, null, context)
-                        : getFlowExecutor().resumeExecution(pausedKey, context);
+                        ? executor.launchExecution(flowId, null, context)
+                        : executor.resumeExecution(pausedKey, context);
 
         // need to store the paused key
         // will be put to the session
@@ -149,10 +129,10 @@ public class FlowAction
 
     /**
      * {@link FlowExecutor Flow executor} bean name as configured in the Spring
-     * context hierarchy.
+     * web application context hierarchy.
      * <p/>
      * This action will try to find the {@link FlowExecutor flow executor} bean
-     * by this name from the Spring context hierarchy.
+     * by this name from the Spring web application context.
      *
      * @param flowExecutorBean {@link FlowExecutor flow executor} bean name to
      *                         be set
@@ -163,26 +143,14 @@ public class FlowAction
 
     /**
      * {@link FlowExecutor Flow executor} must be configured in the Spring
-     * context.
+     * web application context.
      *
      * @return {@link FlowExecutor flow executor} bean
      */
     public FlowExecutor getFlowExecutor() {
-        // need to find the Spring web application context
-        WebApplicationContext context =
-                WebApplicationContextUtils
-                        .getRequiredWebApplicationContext(
-                                ServletActionContext.getServletContext());
-
-        // have the flow executor configured?
-        // if yes, get the flow execution
-        // else, blame
-        if (context.containsBean(flowExecutorBean))
-            flowExecutor = context.getBean(flowExecutorBean, FlowExecutor.class);
-        else
-            throw new RuntimeException("Flow executor named as '" + flowExecutorBean + "' not found!");
-
-        return flowExecutor;
+        return flowExecutor == null
+               ? FlowExecutorUtils.getRequiredFlowExecutor(flowExecutorBean)
+               : flowExecutor;
     }
 
     /**
