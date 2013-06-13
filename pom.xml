@@ -27,7 +27,7 @@
   <artifactId>struts2-webflow</artifactId>
   <version>1.0-SNAPSHOT</version>
 
-  <name>Struts2 Web Flow Plugin</name>
+  <name>Struts 2 Web Flow Plugin</name>
   <description>Spring Web Flow Plugin for Struts 2</description>
 
   <dependencies>
