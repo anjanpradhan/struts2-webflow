@@ -48,7 +48,7 @@ public class AnnotationFlowScopeInterceptor
             ValueStack stack = invocation.getStack();
 
             // from flow execution scope to value stack
-            List<Field> fields = new ArrayList<>();
+            List<Field> fields = new ArrayList<Field>();
             AnnotationUtils.addAllFields(FlowIn.class, invocation.getAction().getClass(), fields);
             for (Field field : fields) {
                 String fieldName = field.getName();
@@ -72,7 +72,7 @@ public class AnnotationFlowScopeInterceptor
             Map flowScopeAsMap = getFlowScopeAsMap();
 
             // from value stack to flow execution scope
-            List<Field> fields = new ArrayList<>();
+            List<Field> fields = new ArrayList<Field>();
             AnnotationUtils.addAllFields(FlowOut.class, invocation.getAction().getClass(), fields);
             for (Field field : fields) {
                 String fieldName = field.getName();
