@@ -30,9 +30,10 @@ import com.opensymphony.xwork2.ActionInvocation;
 public final class ExternalContextUtils {
 
     /**
-     * Creates the {@link ExternalContext external context} and attaches the
-     * {@link ActionContext#getActionInvocation() action invocation}
-     * to its request map.
+     * Creates the {@link ExternalContext external context} and additionally
+     * attaches the
+     * {@link ActionContext#getActionInvocation() action invocation} to its
+     * request map.
      *
      * @return {@link ExternalContext external context}
      */

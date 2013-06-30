@@ -18,6 +18,9 @@ package in.anjan.struts2webflow;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.interceptor.Interceptor;
 import com.opensymphony.xwork2.util.ValueStack;
@@ -34,23 +37,16 @@ public class PausedKeyInterceptor
         implements Interceptor {
 
     /**
-     * Default key to put the
-     * {@link
-     *  org.springframework.webflow.executor.FlowExecutionResult#getPausedKey()
-     *  flow execution paused key}
-     * to the session.
+     * The logger.
      */
-    public static final String DEFAULT_PAUSED_KEY_SESSION_KEY = PausedKeyInterceptor.class.getName();
+    private static final Logger LOGGER = LoggerFactory.getLogger(PausedKeyInterceptor.class);
 
     /**
-     * {@link
-     *  org.springframework.webflow.executor.FlowExecutionResult#getPausedKey()
-     *  Flow execution paused key}
-     * as configured.
+     * The {@link PluginConfiguration plugin configuration} as configured.
      * <p/>
-     * Can be set through {@link #setPausedKeySessionKey(String)}.
+     * Can be set through {@link #setConfiguration(PluginConfiguration)}.
      */
-    private String pausedKeySessionKey = DEFAULT_PAUSED_KEY_SESSION_KEY;
+    private PluginConfiguration configuration = new PluginConfiguration();
 
     /**
      * {@inheritDoc}
@@ -81,9 +77,26 @@ public class PausedKeyInterceptor
         // have the paused key in session?
         // if yes, set it to value stack
         // (eventually it will turn up to flow action)
-        String pausedKey = (String) session.get(pausedKeySessionKey);
-        if (pausedKey != null)
+        String pausedKey = (String) session.get(configuration.getPausedKeySessionKey());
+        if (pausedKey != null) {
+            LOGGER.debug("found paused key {} in session", pausedKey);
             stack.setValue(FlowAction.DEFAULT_PAUSED_KEY_EXPRESSION, pausedKey);
+        }
+
+        // need to set the scope values from session to value stack
+        // this is required nested property to work with OGNL
+        if (FlowScopeUtils.hasFlowScope(configuration)) {
+            Map flowScopeMap = FlowScopeUtils.getFlowScopeAsMap(configuration);
+
+            for (Object key : flowScopeMap.keySet()) {
+                String name = (String) key;
+                Object value = flowScopeMap.get(name);
+                if (value != null) {
+                    LOGGER.debug("found {} with value {} in flow scope", name, value);
+                    stack.set(name, value);
+                }
+            }
+        }
 
         // filter out event and other parameters
         // to avoid error notifications on Struts dev mode
@@ -96,33 +109,20 @@ public class PausedKeyInterceptor
         // get the paused key from value stack
         // and set it to session
         pausedKey = (String) stack.findValue(FlowAction.DEFAULT_PAUSED_KEY_EXPRESSION);
-        session.put(pausedKeySessionKey, pausedKey);
+        session.put(configuration.getPausedKeySessionKey(), pausedKey);
 
         // handover the result
+        LOGGER.debug("returning result {}", result);
         return result;
     }
 
     /**
-     * @return {@link
-     *          org.springframework.webflow.executor.FlowExecutionResult#getPausedKey()
-     *          flow execution paused key}
-     */
-    public String getPausedKeySessionKey() {
-        return pausedKeySessionKey;
-    }
-
-    /**
-     * {@link
-     *  org.springframework.webflow.executor.FlowExecutionResult#getPausedKey()
-     *  Flow execution paused key}
-     * as configured.
+     * {@link PluginConfiguration Plugin configuration} as configured.
      *
-     * @param pausedKeySessionKey {@link
-     *                             org.springframework.webflow.executor.FlowExecutionResult#getPausedKey()
-     *                             flow execution paused key}
-     *                            to be set
+     * @param configuration {@link PluginConfiguration plugin configuration} to
+     *                      be set
      */
-    public void setPausedKeySessionKey(String pausedKeySessionKey) {
-        this.pausedKeySessionKey = pausedKeySessionKey;
+    public void setConfiguration(PluginConfiguration configuration) {
+        this.configuration = configuration;
     }
 }

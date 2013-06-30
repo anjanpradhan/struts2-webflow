@@ -18,6 +18,9 @@ package in.anjan.struts2webflow;
 
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.opensymphony.xwork2.ActionContext;
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.util.ValueStack;
@@ -29,6 +32,11 @@ import com.opensymphony.xwork2.util.ValueStack;
 public class FlowScopeInterceptor
         extends AbstractFlowScopeInterceptor {
 
+    /**
+     * The logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlowScopeInterceptor.class);
+
     private String[] flowScope = null;
 
     /**
@@ -38,6 +46,8 @@ public class FlowScopeInterceptor
     public String intercept(ActionInvocation invocation)
             throws Exception {
         if (hasFlowScope()) {
+            LOGGER.debug("within flow scope");
+
             invocation.addPreResultListener(this);
 
             Map flowScopeMap = getFlowScopeAsMap();
@@ -46,8 +56,10 @@ public class FlowScopeInterceptor
             if (flowScope != null) {
                 for (String key : flowScope) {
                     Object value = flowScopeMap.get(key);
-                    if (value != null)
+                    if (value != null) {
+                        LOGGER.debug("found {} with value {} in flow scope", key, value);
                         stack.setValue(key, value);
+                    }
                 }
             }
         }
@@ -62,13 +74,17 @@ public class FlowScopeInterceptor
     @SuppressWarnings("unchecked")
     public void beforeResult(ActionInvocation invocation, String resultCode) {
         if (hasFlowScope()) {
+            LOGGER.debug("within flow scope");
+
             ValueStack stack = ActionContext.getContext().getValueStack();
             Map flowScopeAsMap = getFlowScopeAsMap();
 
             for (String key : flowScope) {
                 Object value = stack.findValue(key);
-                if (value != null)
+                if (value != null) {
+                    LOGGER.debug("found {} with value {} in value stack", key, value);
                     flowScopeAsMap.put(key, value);
+                }
             }
         }
     }

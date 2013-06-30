@@ -21,6 +21,9 @@ import java.util.Map;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.springframework.web.servlet.View;
 import org.springframework.web.servlet.ViewResolver;
 import org.springframework.webflow.context.ExternalContextHolder;
@@ -35,6 +38,11 @@ public class JspViewResolver
         implements FlowViewResolver, ViewResolver {
 
     /**
+     * The logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(JspViewResolver.class);
+
+    /**
      * Default attribute name to put the view to the context's request map.
      */
     public static final String DEFAULT_VIEW_ATTRIBUTE_NAME = JspViewResolver.class.getName();
@@ -45,13 +53,15 @@ public class JspViewResolver
      * To make Spring Web Flow and us happy.
      */
     private static final View NO_OP_VIEW = new View() {
-        @Override public String getContentType() {
+        @Override
+        public String getContentType() {
             return null;
         }
 
-        @Override public void render(Map<String, ?> model,
-                                     HttpServletRequest request,
-                                     HttpServletResponse response) {
+        @Override
+        public void render(Map<String, ?> model,
+                           HttpServletRequest request,
+                           HttpServletResponse response) {
             // no-op;
         }
     };
@@ -85,6 +95,8 @@ public class JspViewResolver
         // need to put the view to the context's request map
         // otherwise, flow action will be unhappy
         ExternalContextHolder.getExternalContext().getRequestMap().put(DEFAULT_VIEW_ATTRIBUTE_NAME, view);
+
+        LOGGER.debug("resolved view {}", view);
 
         // let Spring Web Flow be happy
         return NO_OP_VIEW;

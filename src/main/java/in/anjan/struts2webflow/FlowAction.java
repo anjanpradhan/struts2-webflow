@@ -16,6 +16,9 @@
 
 package in.anjan.struts2webflow;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.struts2.dispatcher.DefaultActionSupport;
 
 import org.springframework.webflow.context.ExternalContext;
@@ -46,9 +49,9 @@ public class FlowAction
         extends DefaultActionSupport {
 
     /**
-     * Default {@link FlowExecutor flow executor} bean name.
+     * The logger.
      */
-    public static final String DEFAULT_FLOW_EXECUTOR_BEAN = "flowExecutor";
+    private static final Logger LOGGER = LoggerFactory.getLogger(FlowAction.class);
 
     /**
      * Default expression to find/set the
@@ -57,21 +60,13 @@ public class FlowAction
      */
     public static final String DEFAULT_PAUSED_KEY_EXPRESSION = "pausedKey";
 
+
     /**
-     * {@link FlowExecutor Flow executor} bean name as configured in the Spring
-     * web application context hierarchy.
+     * The {@link PluginConfiguration plugin configuration} as configured.
      * <p/>
-     * Can be set through {@link #setFlowExecutorBean(String)}.
-     * <br/>This action will try to find the {@link FlowExecutor flow executor}
-     * bean by this name from the Spring web application context.
+     * Can be set through {@link #setConfiguration(PluginConfiguration)}.
      */
-    private String flowExecutorBean = DEFAULT_FLOW_EXECUTOR_BEAN;
-    /**
-     * {@link FlowExecutor Flow executor} bean.
-     * <p/>
-     * Must be configured in the Spring web application context.
-     */
-    private FlowExecutor flowExecutor;
+    private PluginConfiguration configuration = new PluginConfiguration();
     /**
      * {@link org.springframework.webflow.engine.Flow} id.
      * <p/>
@@ -88,7 +83,9 @@ public class FlowAction
      *  flow execution}
      * .
      * <p/>
-     * Will be set every time either from the session or the value stack.
+     * <p/>
+     * Must be set through {@link #setPausedKey(String)}.
+     * <br/>Will be set every time either from the session or the value stack.
      */
     private String pausedKey;
 
@@ -100,7 +97,9 @@ public class FlowAction
         // create the external context
         ExternalContext context = ExternalContextUtils.createExternalContext();
         // get the flow executor
-        FlowExecutor executor = getFlowExecutor();
+        FlowExecutor executor = FlowExecutorUtils.getRequiredFlowExecutor(configuration.getFlowExecutorBean());
+
+        LOGGER.debug("old paused key {}", pausedKey);
 
         // don't have the paused key?
         // if no, launch the flow execution
@@ -115,56 +114,21 @@ public class FlowAction
         // so, next time, can resume the flow execution
         pausedKey = result.isEnded() ? null : result.getPausedKey();
 
+        LOGGER.debug("new paused key {}", pausedKey);
+
         // hoping view resolver had put it correctly
         // let the Struts handle it
         return (String) context.getRequestMap().get(JspViewResolver.DEFAULT_VIEW_ATTRIBUTE_NAME);
     }
 
     /**
-     * @return {@link FlowExecutor flow executor} bean name
-     */
-    public String getFlowExecutorBean() {
-        return flowExecutorBean;
-    }
-
-    /**
-     * {@link FlowExecutor Flow executor} bean name as configured in the Spring
-     * web application context hierarchy.
-     * <p/>
-     * This action will try to find the {@link FlowExecutor flow executor} bean
-     * by this name from the Spring web application context.
+     * {@link PluginConfiguration Plugin configuration} as configured.
      *
-     * @param flowExecutorBean {@link FlowExecutor flow executor} bean name to
-     *                         be set
+     * @param configuration {@link PluginConfiguration plugin configuration} to
+     *                      be set
      */
-    public void setFlowExecutorBean(String flowExecutorBean) {
-        this.flowExecutorBean = flowExecutorBean;
-    }
-
-    /**
-     * {@link FlowExecutor Flow executor} must be configured in the Spring
-     * web application context.
-     *
-     * @return {@link FlowExecutor flow executor} bean
-     */
-    public FlowExecutor getFlowExecutor() {
-        return flowExecutor == null
-               ? FlowExecutorUtils.getRequiredFlowExecutor(flowExecutorBean)
-               : flowExecutor;
-    }
-
-    /**
-     * @param flowExecutor {@link FlowExecutor flow executor} bean to be set
-     */
-    public void setFlowExecutor(FlowExecutor flowExecutor) {
-        this.flowExecutor = flowExecutor;
-    }
-
-    /**
-     * @return {@link org.springframework.webflow.engine.Flow flow} id.
-     */
-    public String getFlowId() {
-        return flowId;
+    public void setConfiguration(PluginConfiguration configuration) {
+        this.configuration = configuration;
     }
 
     /**

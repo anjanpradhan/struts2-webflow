@@ -21,6 +21,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.opensymphony.xwork2.ActionInvocation;
 import com.opensymphony.xwork2.util.AnnotationUtils;
 import com.opensymphony.xwork2.util.ValueStack;
@@ -36,12 +39,19 @@ public class AnnotationFlowScopeInterceptor
         extends AbstractFlowScopeInterceptor {
 
     /**
+     * The logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(AnnotationFlowScopeInterceptor.class);
+
+    /**
      * {@inheritDoc}
      */
     @Override
     public String intercept(ActionInvocation invocation)
             throws Exception {
         if (hasFlowScope()) {
+            LOGGER.debug("within flow scope");
+
             invocation.addPreResultListener(this);
 
             Map flowScopeAsMap = getFlowScopeAsMap();
@@ -53,8 +63,10 @@ public class AnnotationFlowScopeInterceptor
             for (Field field : fields) {
                 String fieldName = field.getName();
                 Object fieldValue = flowScopeAsMap.get(fieldName);
-                if (fieldValue != null)
+                if (fieldValue != null) {
+                    LOGGER.debug("found {} with value {} in flow scope", fieldName, fieldValue);
                     stack.setValue(fieldName, fieldValue);
+                }
             }
         }
 
@@ -68,6 +80,8 @@ public class AnnotationFlowScopeInterceptor
     @SuppressWarnings("unchecked")
     public void beforeResult(ActionInvocation invocation, String resultCode) {
         if (hasFlowScope()) {
+            LOGGER.debug("within flow scope");
+
             ValueStack stack = invocation.getStack();
             Map flowScopeAsMap = getFlowScopeAsMap();
 
@@ -77,8 +91,10 @@ public class AnnotationFlowScopeInterceptor
             for (Field field : fields) {
                 String fieldName = field.getName();
                 Object fieldValue = stack.findValue(fieldName);
-                if (fieldValue != null)
+                if (fieldValue != null) {
+                    LOGGER.debug("found {} with value {} in value stack", fieldName, fieldValue);
                     flowScopeAsMap.put(fieldName, fieldValue);
+                }
             }
         }
     }

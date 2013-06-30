@@ -19,6 +19,9 @@ package in.anjan.struts2webflow;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import org.apache.struts2.dispatcher.Dispatcher;
 
 import org.springframework.util.StringUtils;
@@ -40,6 +43,11 @@ import com.opensymphony.xwork2.util.ValueStack;
  */
 public class StrutsActionAction
         extends AbstractAction {
+
+    /**
+     * The logger.
+     */
+    private static final Logger LOGGER = LoggerFactory.getLogger(StrutsActionAction.class);
 
     /**
      * Default key to put the {@link RequestContext request context} to extra
@@ -106,6 +114,8 @@ public class StrutsActionAction
         Configuration config = dispatcher.getConfigurationManager().getConfiguration();
         ActionProxyFactory factory = config.getContainer().getInstance(ActionProxyFactory.class);
 
+        LOGGER.debug("invoking namespace {} action {} method {}", finalNamespace, finalAction, finalMethod);
+
         ActionProxy proxy =
                 factory.createActionProxy(
                         finalNamespace,
@@ -116,6 +126,9 @@ public class StrutsActionAction
                         true);
 
         // execute and handover the result
-        return result(proxy.execute());
+        Event event = result(proxy.execute());
+
+        LOGGER.debug("returning event {}", event);
+        return event;
     }
 }
