@@ -69,13 +69,12 @@ public final class FlowScopeUtils {
         // a) parameters
         // b) session
 
-        String pausedKeys[] =
-                (String[]) invocation.getInvocationContext()
+        String pauseKey =
+                invocation.getInvocationContext()
                                      .getParameters()
-                                     .get(FlowAction.DEFAULT_PAUSED_KEY_EXPRESSION);
+                                     .get(FlowAction.DEFAULT_PAUSED_KEY_EXPRESSION).getValue();
 
-        String pauseKey = pausedKeys != null ? pausedKeys[0] : null;
-        if (pauseKey == null) {
+        if (pauseKey == null || "".equalsIgnoreCase(pauseKey)) {
             Map<String, Object> session = context.getSession();
             pauseKey = (String) session.get(pausedKeySessionKey);
         }
